@@ -1,0 +1,28 @@
+name: Build Abaqus LE reduced 3D model
+
+on:
+  push:
+    paths:
+      - 'abaqus_le/**'
+      - '.github/workflows/build-abaqus-le.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Abaqus input deck
+        run: |
+          cd abaqus_le
+          python3 generate_c25_cfrp_reduced3d.py
+          cat C25_CFRP_Abaqus_LE_reduced3D_metadata.json
+          wc -l C25_CFRP_Abaqus_LE_reduced3D.inp
+      - name: Upload model package
+        uses: actions/upload-artifact@v4
+        with:
+          name: C25-CFRP-Abaqus-LE-reduced3D
+          path: |
+            abaqus_le/C25_CFRP_Abaqus_LE_reduced3D.inp
+            abaqus_le/C25_CFRP_Abaqus_LE_reduced3D_metadata.json
+            abaqus_le/generate_c25_cfrp_reduced3d.py
