@@ -1,0 +1,24 @@
+name: Smoke test Code_Aster
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/codeaster-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull Code_Aster container
+        run: docker pull codeastersolver/codeaster-seq:latest
+      - name: Run built-in Code_Aster test
+        run: |
+          docker run --rm codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test zzzz100f | tee codeaster_smoke.log
+      - name: Upload log
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeaster-smoke-log
+          path: codeaster_smoke.log
