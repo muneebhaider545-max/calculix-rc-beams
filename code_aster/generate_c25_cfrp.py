@@ -310,9 +310,7 @@ FIN()
 """
 open("c25_cfrp.comm","w").write(comm)
 
-export="""P version stable
-P ncpus 2
-P memory_limit 6000
+export="""P memory_limit 6000
 P time_limit 3600
 F comm /analysis/c25_cfrp.comm D 1
 F mail /analysis/c25_cfrp.mail D 20
