@@ -207,13 +207,14 @@ ft=0.56*math.sqrt(fc)
 comm=f"""DEBUT()
 
 MA=LIRE_MAILLAGE(FORMAT='ASTER')
+MA=MODI_MAILLAGE(reuse=MA,MAILLAGE=MA,ORIE_FISSURE=_F(GROUP_MA='CZM'))
 
 MO=AFFE_MODELE(
     MAILLAGE=MA,
     AFFE=(
       _F(GROUP_MA='CONC',PHENOMENE='MECANIQUE',MODELISATION='3D'),
       _F(GROUP_MA='PLATE',PHENOMENE='MECANIQUE',MODELISATION='3D'),
-      _F(GROUP_MA='CZM',PHENOMENE='MECANIQUE',MODELISATION='3D_INTERFACE_S'),
+      _F(GROUP_MA='CZM',PHENOMENE='MECANIQUE',MODELISATION='3D_JOINT'),
       _F(GROUP_MA=('LBOT','LTOP','STIR'),PHENOMENE='MECANIQUE',MODELISATION='BARRE'),
     )
 )
@@ -244,7 +245,7 @@ FRP=DEFI_MATERIAU(ELAS=_F(E=165000.0,NU=0.30))
 
 BOND=DEFI_MATERIAU(
     ELAS=_F(E=3000.0,NU=0.30),
-    RUPT_FRAG=_F(GC=0.10,SIGM_C=2.0,RIGI_GLIS=100.0,PENA_LAGR=400.0)
+    RUPT_FRAG=_F(GC=0.10,SIGM_C=2.0,PENA_ADHERENCE=0.00001)
 )
 
 CHMAT=AFFE_MATERIAU(
@@ -263,8 +264,7 @@ CARA=AFFE_CARA_ELEM(
       _F(GROUP_MA='LBOT',SECTION='CERCLE',CARA='R',VALE=6.35),
       _F(GROUP_MA='LTOP',SECTION='CERCLE',CARA='R',VALE=4.7625),
       _F(GROUP_MA='STIR',SECTION='CERCLE',CARA='R',VALE=3.175),
-    ),
-    MASSIF=_F(GROUP_MA='CZM',ANGL_REP=(0.0,-90.0,0.0))
+    )
 )
 
 BC=AFFE_CHAR_MECA(
@@ -298,7 +298,7 @@ RES=STAT_NON_LINE(
       _F(GROUP_MA='CONC',RELATION='BETON_DOUBLE_DP',DEFORMATION='PETIT'),
       _F(GROUP_MA=('LBOT','LTOP','STIR'),RELATION='VMIS_ISOT_LINE',DEFORMATION='PETIT'),
       _F(GROUP_MA='PLATE',RELATION='ELAS',DEFORMATION='PETIT'),
-      _F(GROUP_MA='CZM',RELATION='CZM_EXP_MIX',DEFORMATION='PETIT'),
+      _F(GROUP_MA='CZM',RELATION='CZM_EXP_REG',DEFORMATION='PETIT'),
     ),
     INCREMENT=_F(LIST_INST=LI),
     NEWTON=_F(MATRICE='TANGENTE',REAC_ITER=1),
@@ -344,8 +344,8 @@ open("c25_cfrp.export","w").write(export)
 json.dump({
  "beam_mm":[L,B,H],"support_x_mm":[76.2,1143.0],"load_x_mm":609.6,
  "concrete_fc_MPa":fc,"concrete_E_MPa":E,"concrete_ft_MPa":ft,
- "concrete_law":"BETON_DOUBLE_DP","interface_law":"CZM_EXP_MIX",
- "interface_initial":{"SIGM_C_MPa":2.0,"GC_N_per_mm":0.10,"RIGI_GLIS":100.0,"PENA_LAGR":400.0},
+ "concrete_law":"BETON_DOUBLE_DP","interface_law":"CZM_EXP_REG",
+ "interface_initial":{"SIGM_C_MPa":2.0,"GC_N_per_mm":0.10,"PENA_ADHERENCE":0.00001},
  "cfrp":{"E_MPa":165000.0,"thickness_mm":4.0},
  "note":"Interface parameters are literature/initial calibration values, not measured adhesive properties. Reinforcement is reconstructed from the thesis schematic/source data."
 },open("c25_cfrp_metadata.json","w"),indent=2)
