@@ -16,23 +16,22 @@ jobs:
       - name: Pull official Code_Aster sequential image
         run: docker pull codeastersolver/codeaster-seq:latest
 
-      - name: Prepare writable Code_Aster work area
+      - name: Inspect Code_Aster image
         shell: bash
         run: |
-          mkdir -p "$PWD/asterwork/flasheur"
-          chmod -R 777 "$PWD/asterwork"
+          docker run --rm --user root codeastersolver/codeaster-seq:latest bash -lc 'id; ls -ld /work/aster /work/aster/flasheur 2>/dev/null || true; ls -l /scif/apps/aster/share/aster/config.txt 2>/dev/null || true; which as_run || true'
 
       - name: Verify concrete BETON_DOUBLE_DP
         shell: bash
         run: |
           set -o pipefail
-          docker run --rm -v "$PWD/asterwork:/work/aster" codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnv151a 2>&1 | tee ssnv151a.log
+          docker run --rm --user root codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnv151a 2>&1 | tee ssnv151a.log
 
       - name: Verify cohesive CZM_EXP_MIX
         shell: bash
         run: |
           set -o pipefail
-          docker run --rm -v "$PWD/asterwork:/work/aster" codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnp118s 2>&1 | tee ssnp118s.log
+          docker run --rm --user root codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnp118s 2>&1 | tee ssnp118s.log
 
       - name: Upload verification logs
         uses: actions/upload-artifact@v4
