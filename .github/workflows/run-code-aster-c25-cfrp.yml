@@ -28,6 +28,17 @@ jobs:
         shell: bash
         run: docker pull scimulate/code_aster:15.2
 
+      - name: Detect Code_Aster installed version
+        shell: bash
+        run: |
+          set -euxo pipefail
+          CFGDIR=$(docker run --rm scimulate/code_aster:15.2 bash -lc "find /opt/aster -maxdepth 3 -name config.txt -printf '%h\n' | head -1")
+          echo "Config directory: $CFGDIR"
+          VER=$(basename "$CFGDIR")
+          echo "ASTER_VERSION=$VER" >> "$GITHUB_ENV"
+          sed -i "s/^P version .*/P version $VER/" code_aster/c25_cfrp.export
+          cat code_aster/c25_cfrp.export
+
       - name: Run Code_Aster nonlinear 3D model
         shell: bash
         run: |
