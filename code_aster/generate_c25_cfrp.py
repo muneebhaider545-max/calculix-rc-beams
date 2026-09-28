@@ -39,6 +39,7 @@ hexes=[]
 conc=[]
 plate=[]
 czm=[]
+cohesive_penta=[]
 eid=0
 def add_hex(prefix,nodelist,group):
     global eid
@@ -78,21 +79,6 @@ for ix in range(len(xs)-1):
             nodes[("p",ix,iy+1,1)],
         ]
         add_hex("P",n,plate)
-
-# zero-thickness cohesive interface, plate-top side then concrete-bottom side
-for ix in range(len(xs)-1):
-    for iy in range(len(ys)-1):
-        n=[
-            nodes[("p",ix,iy,1)],
-            nodes[("p",ix+1,iy,1)],
-            nodes[("p",ix+1,iy+1,1)],
-            nodes[("p",ix,iy+1,1)],
-            nodes[("c",ix,iy,0)],
-            nodes[("c",ix+1,iy,0)],
-            nodes[("c",ix+1,iy+1,0)],
-            nodes[("c",ix,iy+1,0)],
-        ]
-        add_hex("J",n,czm)
 
 segs=[]
 lbot=[]; ltop=[]; stir=[]
@@ -161,6 +147,10 @@ for name,x,y,z in node_lines:
 mail+=["FINSF",""]
 mail+=["HEXA8"]
 for en,n in hexes:
+    mail.append(en+" "+" ".join(n))
+mail+=["FINSF",""]
+mail+=["PENTA6"]
+for en,n in cohesive_penta:
     mail.append(en+" "+" ".join(n))
 mail+=["FINSF",""]
 mail+=["SEG2"]
@@ -330,5 +320,5 @@ json.dump({
  "note":"Interface parameters are literature/initial calibration values, not measured adhesive properties. Reinforcement is reconstructed from the thesis schematic/source data."
 },open("c25_cfrp_metadata.json","w"),indent=2)
 
-print("nodes",len(node_lines),"hex",len(hexes),"segments",len(segs))
+print("nodes",len(node_lines),"hex",len(hexes),"penta",len(cohesive_penta),"segments",len(segs))
 print("concrete elements",len(conc),"plate",len(plate),"cohesive",len(czm))
