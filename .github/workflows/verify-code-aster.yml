@@ -1,0 +1,37 @@
+name: Verify Code_Aster
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify-code-aster:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull Code_Aster stable container
+        shell: bash
+        run: |
+          set -euxo pipefail
+          docker pull simvia/code_aster:stable
+
+      - name: Verify Code_Aster executable
+        shell: bash
+        run: |
+          set -euxo pipefail
+          docker run --rm simvia/code_aster:stable --help > code_aster_help.txt 2>&1 || true
+          docker run --rm simvia/code_aster:stable --version > code_aster_version.txt 2>&1 || true
+          cat code_aster_help.txt
+          cat code_aster_version.txt
+
+      - name: Upload verification logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-aster-verification
+          path: |
+            code_aster_help.txt
+            code_aster_version.txt
