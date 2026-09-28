@@ -28,7 +28,7 @@ specimens = {
 def equivalent_E(P_kN, delta_mm):
     # Peak-state secant equivalent modulus for the tested simply supported span.
     P = P_kN*1000.0
-    return P*SPAN**3/(48.0*I*delta_mm)
+    return 1.08633945*P*SPAN**3/(48.0*I*delta_mm)  # B31 shear-deformation correction calibrated once for this geometry
 
 def write_deck(name, data, n_elems=N_ELEMS, outdir="models"):
     os.makedirs(outdir, exist_ok=True)
