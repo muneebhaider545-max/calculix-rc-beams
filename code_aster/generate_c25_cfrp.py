@@ -245,7 +245,7 @@ FRP=DEFI_MATERIAU(ELAS=_F(E=165000.0,NU=0.30))
 
 BOND=DEFI_MATERIAU(
     ELAS=_F(E=3000.0,NU=0.30),
-    RUPT_FRAG=_F(GC=10.0,SIGM_C=4.0,PENA_ADHERENCE=0.00001)
+    RUPT_FRAG=_F(GC=1000.0,SIGM_C=20.0,PENA_ADHERENCE=0.00001)
 )
 
 CHMAT=AFFE_MATERIAU(
@@ -279,12 +279,12 @@ BC=AFFE_CHAR_MECA(
 
 LD=AFFE_CHAR_MECA(
     MODELE=MO,
-    DDL_IMPO=_F(GROUP_NO='LOAD',DZ=-22.0)
+    DDL_IMPO=_F(GROUP_NO='LOAD',DZ=-20.10)
 )
 
 RAMP=DEFI_FONCTION(NOM_PARA='INST',VALE=(0.0,0.0,1.0,1.0))
 
-LR=DEFI_LIST_REEL(DEBUT=0.0,INTERVALLE=_F(JUSQU_A=1.0,NOMBRE=100))
+LR=DEFI_LIST_REEL(DEBUT=0.0,INTERVALLE=_F(JUSQU_A=1.0,NOMBRE=50))
 LI=DEFI_LIST_INST(DEFI_LIST=_F(LIST_INST=LR),
                   ECHEC=_F(ACTION='DECOUPE',SUBD_METHODE='MANUEL',
                            SUBD_PAS=4,SUBD_NIVEAU=5))
@@ -346,9 +346,9 @@ json.dump({
  "beam_mm":[L,B,H],"support_x_mm":[76.2,1143.0],"load_x_mm":609.6,
  "concrete_fc_MPa":fc,"concrete_E_MPa":E,"concrete_ft_MPa":ft,
  "concrete_law":"BETON_DOUBLE_DP","interface_law":"CZM_EXP_REG",
- "interface_initial":{"SIGM_C_MPa":4.0,"GC_N_per_mm":10.0,"PENA_ADHERENCE":0.00001},
+ "interface_initial":{"SIGM_C_MPa":20.0,"GC_N_per_mm":1000.0,"PENA_ADHERENCE":0.00001},
  "cfrp":{"E_MPa":165000.0,"thickness_mm":4.0},
- "note":"Interface parameters are calibrated numerical assumptions selected to reproduce the experimentally observed intact-bond CFRP response, not measured adhesive properties. A midspan CFRP in-plane symmetry anchor (DX=DY=0 at one central interface node) removes rigid-body motion after severe interface softening without restraining vertical separation. Reinforcement is reconstructed from the thesis schematic/source data."
+ "note":"Interface parameters are high-bond calibrated numerical assumptions used to represent the experimentally observed absence of CFRP debonding up to flexural failure; they are not measured adhesive fracture properties. A midspan CFRP in-plane symmetry anchor (DX=DY=0 at one central interface node) removes rigid-body motion after severe interface softening without restraining vertical separation. Reinforcement is reconstructed from the thesis schematic/source data."
 },open("c25_cfrp_metadata.json","w"),indent=2)
 
 print("nodes",len(node_lines),"hex",len(hexes),"penta",len(cohesive_penta),"segments",len(segs))
