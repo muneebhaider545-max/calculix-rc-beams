@@ -1,0 +1,71 @@
+name: Run CalculiX RC beam models
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download CalculiX 2.22 Linux x64
+        shell: bash
+        run: |
+          set -euxo pipefail
+          URL="https://github.com/OmnibusCloud/CalculiX/releases/download/ccx-v2.22-1/ccx-linux-x64.zip"
+          curl -L --retry 5 --retry-delay 3 -o ccx-linux-x64.zip "$URL"
+          echo "841de697ff1f5a912e664f0abea7b314e2f9108d082fd2ddc559683f3e2dd209  ccx-linux-x64.zip" | sha256sum -c -
+          mkdir -p ccx
+          unzip -q ccx-linux-x64.zip -d ccx
+          find ccx -maxdepth 4 -type f | head -100
+
+      - name: Locate and test ccx
+        shell: bash
+        run: |
+          set -euxo pipefail
+          CCX="$(find "$GITHUB_WORKSPACE/ccx" -type f \( -name 'ccx' -o -name 'ccx_*' \) | head -1)"
+          if [ -z "$CCX" ]; then
+            echo "No ccx executable found"
+            exit 1
+          fi
+          chmod +x "$CCX"
+          echo "CCX=$CCX" >> "$GITHUB_ENV"
+          export LD_LIBRARY_PATH="$(dirname "$CCX"):${LD_LIBRARY_PATH:-}"
+          "$CCX" -h || true
+
+      - name: Run 12 RC beam models and mesh study
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export LD_LIBRARY_PATH="$(dirname "$CCX"):${LD_LIBRARY_PATH:-}"
+          python3 run_models.py "$CCX"
+
+      - name: Summarize outputs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cat calculix_results.csv
+          cat mesh_convergence.csv
+          find models -maxdepth 1 -type f | sort
+
+      - name: Upload CalculiX outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculix-rc-beam-results
+          path: |
+            calculix_results.csv
+            mesh_convergence.csv
+            model_metadata.json
+            models/*.inp
+            models/*.dat
+            models/*.frd
+            models/*.sta
+            models/*.cvg
+            models/*.log
+            mesh_*/*
+          if-no-files-found: warn
