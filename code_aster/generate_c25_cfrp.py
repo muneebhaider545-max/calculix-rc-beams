@@ -350,3 +350,5 @@ json.dump({
 
 print("nodes",len(node_lines),"hex",len(hexes),"penta",len(cohesive_penta),"segments",len(segs))
 print("concrete elements",len(conc),"plate",len(plate),"cohesive",len(czm))
+
+# rerun Code_Aster after removing ORIE_FISSURE auto-orientation
