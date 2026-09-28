@@ -24,24 +24,24 @@ jobs:
           wc -l c25_cfrp.mail c25_cfrp.comm
           cat c25_cfrp_metadata.json
 
-      - name: Pull Code_Aster 15.2 image
+      - name: Pull Code_Aster solver image
         shell: bash
-        run: docker pull scimulate/code_aster:15.2
+        run: docker pull codeastersolver/codeaster-seq:latest
 
-      - name: Inspect Code_Aster solver layout
+      - name: Inspect Code_Aster solver
         shell: bash
         run: |
-          docker run --rm scimulate/code_aster:15.2 bash -lc 'find /opt/aster -type f \( -name run_aster -o -name profile.sh \) -print | head -30'
+          docker run --rm --user root codeastersolver/codeaster-seq:latest bash -lc 'which as_run; as_run --version || true'
 
       - name: Run Code_Aster nonlinear 3D model
         shell: bash
         run: |
           set -o pipefail
-          docker run --rm \
+          docker run --rm --user root \
             -v "$PWD/code_aster:/analysis" \
             -w /analysis \
-            scimulate/code_aster:15.2 \
-            bash -lc 'RUNASTER=$(find /opt/aster -type f -name run_aster | head -1); echo "RUNASTER=$RUNASTER"; ROOT=$(dirname "$(dirname "$RUNASTER")"); if [ -f "$ROOT/share/aster/profile.sh" ]; then source "$ROOT/share/aster/profile.sh"; fi; "$RUNASTER" c25_cfrp.export' 2>&1 | tee code_aster/c25_cfrp_console.log
+            codeastersolver/codeaster-seq:latest \
+            bash -lc 'as_run c25_cfrp.export' 2>&1 | tee code_aster/c25_cfrp_console.log
 
       - name: Inspect results
         if: always()
