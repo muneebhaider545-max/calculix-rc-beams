@@ -245,7 +245,7 @@ FRP=DEFI_MATERIAU(ELAS=_F(E=165000.0,NU=0.30))
 
 BOND=DEFI_MATERIAU(
     ELAS=_F(E=3000.0,NU=0.30),
-    RUPT_FRAG=_F(GC=0.50,SIGM_C=4.0,PENA_ADHERENCE=0.00001)
+    RUPT_FRAG=_F(GC=10.0,SIGM_C=4.0,PENA_ADHERENCE=0.00001)
 )
 
 CHMAT=AFFE_MATERIAU(
@@ -279,7 +279,7 @@ BC=AFFE_CHAR_MECA(
 
 LD=AFFE_CHAR_MECA(
     MODELE=MO,
-    DDL_IMPO=_F(GROUP_NO='LOAD',DZ=-25.0)
+    DDL_IMPO=_F(GROUP_NO='LOAD',DZ=-22.0)
 )
 
 RAMP=DEFI_FONCTION(NOM_PARA='INST',VALE=(0.0,0.0,1.0,1.0))
@@ -346,9 +346,9 @@ json.dump({
  "beam_mm":[L,B,H],"support_x_mm":[76.2,1143.0],"load_x_mm":609.6,
  "concrete_fc_MPa":fc,"concrete_E_MPa":E,"concrete_ft_MPa":ft,
  "concrete_law":"BETON_DOUBLE_DP","interface_law":"CZM_EXP_REG",
- "interface_initial":{"SIGM_C_MPa":4.0,"GC_N_per_mm":0.50,"PENA_ADHERENCE":0.00001},
+ "interface_initial":{"SIGM_C_MPa":4.0,"GC_N_per_mm":10.0,"PENA_ADHERENCE":0.00001},
  "cfrp":{"E_MPa":165000.0,"thickness_mm":4.0},
- "note":"Interface parameters are calibrated numerical assumptions, not measured adhesive properties. A midspan CFRP in-plane symmetry anchor (DX=DY=0 at one central interface node) removes rigid-body motion after severe interface softening without restraining vertical separation. Reinforcement is reconstructed from the thesis schematic/source data."
+ "note":"Interface parameters are calibrated numerical assumptions selected to reproduce the experimentally observed intact-bond CFRP response, not measured adhesive properties. A midspan CFRP in-plane symmetry anchor (DX=DY=0 at one central interface node) removes rigid-body motion after severe interface softening without restraining vertical separation. Reinforcement is reconstructed from the thesis schematic/source data."
 },open("c25_cfrp_metadata.json","w"),indent=2)
 
 print("nodes",len(node_lines),"hex",len(hexes),"penta",len(cohesive_penta),"segments",len(segs))
