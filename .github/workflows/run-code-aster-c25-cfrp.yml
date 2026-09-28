@@ -31,7 +31,7 @@ jobs:
       - name: Inspect Code_Aster solver
         shell: bash
         run: |
-          docker run --rm scimulate/code_aster:15.2 bash -lc 'find /opt/aster -type f \\( -name run_aster -o -name profile.sh \\) -print | head -30'
+          docker run --rm scimulate/code_aster:15.2 bash -lc 'find /opt/aster -type f -name run_aster -print | head -10'
 
       - name: Run Code_Aster nonlinear 3D model
         shell: bash
