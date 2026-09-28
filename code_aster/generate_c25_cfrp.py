@@ -80,6 +80,36 @@ for ix in range(len(xs)-1):
         ]
         add_hex("P",n,plate)
 
+# Zero-thickness cohesive interface: two degenerate PENTA6 wedges per rectangular patch.
+# The first triangular face uses distinct CFRP top-surface nodes and the second
+# matching face uses coincident concrete bottom-surface nodes.
+for ix in range(len(xs)-1):
+    for iy in range(len(ys)-1):
+        nA=[
+            nodes[("p",ix,iy,1)],
+            nodes[("p",ix+1,iy,1)],
+            nodes[("p",ix+1,iy+1,1)],
+            nodes[("c",ix,iy,0)],
+            nodes[("c",ix+1,iy,0)],
+            nodes[("c",ix+1,iy+1,0)],
+        ]
+        eid+=1
+        en=nm("J",eid)
+        cohesive_penta.append((en,nA))
+        czm.append(en)
+        nB=[
+            nodes[("p",ix,iy,1)],
+            nodes[("p",ix+1,iy+1,1)],
+            nodes[("p",ix,iy+1,1)],
+            nodes[("c",ix,iy,0)],
+            nodes[("c",ix+1,iy+1,0)],
+            nodes[("c",ix,iy+1,0)],
+        ]
+        eid+=1
+        en=nm("J",eid)
+        cohesive_penta.append((en,nB))
+        czm.append(en)
+
 segs=[]
 lbot=[]; ltop=[]; stir=[]
 sid=0
