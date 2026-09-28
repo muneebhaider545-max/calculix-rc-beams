@@ -26,3 +26,6 @@ jobs:
             abaqus_le/C25_CFRP_Abaqus_LE_reduced3D.inp
             abaqus_le/C25_CFRP_Abaqus_LE_reduced3D_metadata.json
             abaqus_le/generate_c25_cfrp_reduced3d.py
+            abaqus_le/RUN_ABAQUS_LE.bat
+            abaqus_le/extract_odb_results.py
+            abaqus_le/README_RUN.txt
