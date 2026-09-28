@@ -1,0 +1,37 @@
+name: Verify Code_Aster Laws
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify-laws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull official Code_Aster sequential image
+        run: docker pull codeastersolver/codeaster-seq:latest
+
+      - name: Verify concrete BETON_DOUBLE_DP
+        shell: bash
+        run: |
+          set -o pipefail
+          docker run --rm codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnv151a 2>&1 | tee ssnv151a.log
+
+      - name: Verify cohesive CZM_EXP_MIX
+        shell: bash
+        run: |
+          set -o pipefail
+          docker run --rm codeastersolver/codeaster-seq:latest as_run --nodebug_stderr --test ssnp118s 2>&1 | tee ssnp118s.log
+
+      - name: Upload verification logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-aster-law-verification
+          path: |
+            ssnv151a.log
+            ssnp118s.log
