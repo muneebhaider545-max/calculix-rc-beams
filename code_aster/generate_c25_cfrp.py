@@ -310,16 +310,16 @@ FIN()
 """
 open("c25_cfrp.comm","w").write(comm)
 
-export="""P version unstable
+export="""P version stable
 P ncpus 2
 P memory_limit 6000
 P time_limit 3600
-F comm /aster/c25_cfrp.comm D 1
-F mail /aster/c25_cfrp.mail D 20
-F mess /aster/c25_cfrp.mess R 6
-F resu /aster/force_table.txt R 8
-F resu /aster/disp_table.txt R 9
-F rmed /aster/c25_cfrp.rmed R 80
+F comm /home/aster/shared/c25_cfrp.comm D 1
+F mail /home/aster/shared/c25_cfrp.mail D 20
+F mess /home/aster/shared/c25_cfrp.mess R 6
+F resu /home/aster/shared/force_table.txt R 8
+F resu /home/aster/shared/disp_table.txt R 9
+F rmed /home/aster/shared/c25_cfrp.rmed R 80
 """
 open("c25_cfrp.export","w").write(export)
 
