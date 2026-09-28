@@ -1,0 +1,65 @@
+name: Run Code_Aster 3D C25 CFRP
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'code_aster/**'
+      - '.github/workflows/run-code-aster-c25-cfrp.yml'
+  workflow_dispatch:
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate 3D model
+        shell: bash
+        run: |
+          cd code_aster
+          python3 generate_c25_cfrp.py
+          wc -l c25_cfrp.mail c25_cfrp.comm
+          cat c25_cfrp_metadata.json
+
+      - name: Pull Code_Aster v13.6 image
+        shell: bash
+        run: docker pull quay.io/tianyikillua/code_aster:v13
+
+      - name: Run Code_Aster nonlinear 3D model
+        shell: bash
+        run: |
+          set -o pipefail
+          docker run --rm \
+            -v "$PWD/code_aster:/home/aster/shared" \
+            -w /home/aster/shared \
+            quay.io/tianyikillua/code_aster:v13 \
+            "/home/aster/aster/bin/as_run c25_cfrp.export" 2>&1 | tee code_aster/c25_cfrp_console.log
+
+      - name: Inspect results
+        if: always()
+        shell: bash
+        run: |
+          ls -lah code_aster
+          tail -300 code_aster/c25_cfrp.mess 2>/dev/null || true
+          cat code_aster/force_table.txt 2>/dev/null || true
+          cat code_aster/disp_table.txt 2>/dev/null || true
+
+      - name: Upload 3D model results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-aster-c25-cfrp-3d-results
+          path: |
+            code_aster/c25_cfrp.mail
+            code_aster/c25_cfrp.comm
+            code_aster/c25_cfrp.export
+            code_aster/c25_cfrp_metadata.json
+            code_aster/c25_cfrp.mess
+            code_aster/c25_cfrp.rmed
+            code_aster/force_table.txt
+            code_aster/disp_table.txt
+            code_aster/c25_cfrp_console.log
+          if-no-files-found: warn
