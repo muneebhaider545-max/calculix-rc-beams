@@ -26,22 +26,22 @@ jobs:
 
       - name: Pull Code_Aster solver image
         shell: bash
-        run: docker pull codeastersolver/codeaster-seq:latest
+        run: docker pull scimulate/code_aster:15.2
 
       - name: Inspect Code_Aster solver
         shell: bash
         run: |
-          docker run --rm --user root codeastersolver/codeaster-seq:latest bash -lc 'which as_run; as_run --version || true'
+          docker run --rm scimulate/code_aster:15.2 bash -lc 'find /opt/aster -type f \\( -name run_aster -o -name profile.sh \\) -print | head -30'
 
       - name: Run Code_Aster nonlinear 3D model
         shell: bash
         run: |
           set -o pipefail
-          docker run --rm --user root \
+          docker run --rm \
             -v "$PWD/code_aster:/analysis" \
             -w /analysis \
-            codeastersolver/codeaster-seq:latest \
-            bash -lc 'as_run c25_cfrp.export' 2>&1 | tee code_aster/c25_cfrp_console.log
+            scimulate/code_aster:15.2 \
+            bash -lc 'RUNASTER=$(find /opt/aster -type f -name run_aster | head -1); ROOT=$(dirname "$(dirname "$RUNASTER")"); if [ -f "$ROOT/share/aster/profile.sh" ]; then source "$ROOT/share/aster/profile.sh"; fi; "$RUNASTER" c25_cfrp.export' 2>&1 | tee code_aster/c25_cfrp_console.log
 
       - name: Inspect results
         if: always()
