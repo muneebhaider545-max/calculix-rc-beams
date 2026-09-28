@@ -58,7 +58,7 @@ def write_deck(name, data, n_elems=N_ELEMS, outdir="models"):
         f.write("*ELASTIC\n")
         f.write(f"{E:.8f},0.20\n")
         f.write("*BEAM SECTION,ELSET=EALL,MATERIAL=EQMAT,SECTION=RECT\n")
-        f.write(f"{B:.6f},{H:.6f}\n")
+        f.write(f"{H:.6f},{B:.6f}\n")
         f.write("0.,0.,1.\n")
         f.write("*BOUNDARY\n")
         # left pin: translations fixed; right roller: vertical/lateral fixed
