@@ -1,0 +1,86 @@
+name: Run C25-CFRP with OpenRadioss HyperMesh-compatible solver
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'openradioss/**'
+      - '.github/workflows/run-openradioss-c25-cfrp.yml'
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate reduced 3D source model
+        run: |
+          cd abaqus_le
+          python3 generate_c25_cfrp_reduced3d.py
+          cp C25_CFRP_Abaqus_LE_reduced3D.inp ../C25_CFRP.inp
+
+      - name: Download OpenRadioss stable binaries
+        run: |
+          wget -q https://github.com/OpenRadioss/OpenRadioss/releases/download/latest-20260728/OpenRadioss_linux64.zip -O or.zip
+          echo "598ed7b2905a7bacc8d1781470c250ac79d7558c39ba962768edf3644644fe33  or.zip" | sha256sum -c -
+          unzip -q or.zip -d openradioss
+          chmod +x openradioss/OpenRadioss/exec/*
+
+      - name: Install converter dependency
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-tk
+
+      - name: Check concrete/cohesive keyword support in converter
+        run: |
+          grep -niE 'CONCRETE DAMAGED|DAMAGE INITIATION|DAMAGE EVOLUTION|COHESIVE BEHAVIOR|CONTACT PAIR' openradioss/OpenRadioss/openradioss_gui/inp2rad.py || true
+
+      - name: Convert Abaqus input to native Radioss
+        run: |
+          python3 openradioss/OpenRadioss/openradioss_gui/inp2rad.py C25_CFRP.inp --radv 2025 | tee inp2rad.log
+          ls -lah *.rad
+          echo "=== materials/interfaces in converted starter ==="
+          grep -nE '^/MAT|^/INTER|^/PROP|^/PART|^/FAIL|^/BCS|^/IMP' C25_CFRP_0000.rad | head -300 || true
+          echo "=== engine controls ==="
+          grep -nE '^/RUN|^/ANIM|^/TH|^/TFILE|^/DT|^/IMPL' C25_CFRP_0001.rad | head -300 || true
+
+      - name: Run OpenRadioss Starter
+        env:
+          RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
+        run: |
+          openradioss/OpenRadioss/exec/starter_linux64_gf -i C25_CFRP_0000.rad -np 1 | tee starter.log
+
+      - name: Run OpenRadioss Engine
+        env:
+          RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
+        run: |
+          openradioss/OpenRadioss/exec/engine_linux64_gf -i C25_CFRP_0001.rad -np 1 | tee engine.log
+
+      - name: Convert time histories to CSV
+        if: always()
+        run: |
+          find . -maxdepth 2 -type f | sort > generated_files.txt
+          if ls *_T01 1>/dev/null 2>&1; then
+            openradioss/OpenRadioss/exec/th_to_csv_linux64_gf *_T01 || true
+          fi
+          find . -maxdepth 2 -type f | sort > generated_files_after_conversion.txt
+
+      - name: Upload solver outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: C25-CFRP-OpenRadioss-results
+          path: |
+            C25_CFRP.inp
+            C25_CFRP_0000.rad
+            C25_CFRP_0001.rad
+            inp2rad.log
+            starter.log
+            engine.log
+            generated_files*.txt
+            *.out
+            *.csv
+            *_T*
+            *_A*
+          if-no-files-found: ignore
