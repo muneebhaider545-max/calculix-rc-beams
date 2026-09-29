@@ -181,7 +181,7 @@ f"{1.0:20.12g}{1.0:20.12g}{0.0:20.12g}{0.25:20.12g}",
 starter += [
 "/TH/NODE/1",
 "Load line nodes",
-"DEF",
+"DZ        REACZ",
 ]
 for v in mid_top:
     starter.append(f"{v:10d}{0:10d}")
