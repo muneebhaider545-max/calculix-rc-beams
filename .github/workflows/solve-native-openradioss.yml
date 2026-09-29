@@ -31,7 +31,7 @@ jobs:
           RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
         run: |
           set -o pipefail
-          LIB=$(find ../openradioss/OpenRadioss -name 'libhm_reader_linux64.so' -printf '%h\n' | head -1)
+          LIB=$(find openradioss/OpenRadioss -name 'libhm_reader_linux64.so' -printf '%h\n' | head -1)
           export LD_LIBRARY_PATH="$LIB:${LD_LIBRARY_PATH:-}"
           cd run_native
           ../openradioss/OpenRadioss/exec/starter_linux64_gf -i C25_CFRP_NATIVE_0000.rad -nt 1 2>&1 | tee starter.log
