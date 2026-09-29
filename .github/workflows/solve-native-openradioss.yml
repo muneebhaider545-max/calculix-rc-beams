@@ -62,12 +62,14 @@ jobs:
           python3 ../openradioss_native/postprocess_c25_cfrp.py
           python3 -m pip install -q matplotlib numpy
           python3 ../openradioss_native/render_c25_cfrp.py
-          ls -lh C25_CFRP_OpenRadioss_3D_visual.png
-          echo PNG_BASE64_BEGIN
-          base64 -w0 C25_CFRP_OpenRadioss_3D_visual.png
-          echo
-          echo PNG_BASE64_END
-          find . -maxdepth 1 -type f -printf '%f\n' | sort > files.txt
+          python3 ../openradioss_native/render_publication_figures.py
+          echo '=== PUBLICATION FIGURES ==='
+          ls -lh publication_figures/* || true
+          echo '=== FIELD INVENTORY ==='
+          cat publication_figures/available_fields.json || true
+          echo '=== GENERATED README ==='
+          cat publication_figures/README.txt || true
+          find . -maxdepth 2 -type f -printf '%p\n' | sort > files.txt
       - name: Upload genuine solver outputs
         if: always()
         uses: actions/upload-artifact@v4
