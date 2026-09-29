@@ -1,0 +1,56 @@
+name: Solve native OpenRadioss C25-CFRP
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'openradioss_native/**'
+      - '.github/workflows/solve-native-openradioss.yml'
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate native Radioss model
+        run: |
+          mkdir -p run_native
+          cd run_native
+          python3 ../openradioss_native/generate_c25_cfrp_native.py
+          ls -lh
+      - name: Download OpenRadioss
+        run: |
+          wget -q https://github.com/OpenRadioss/OpenRadioss/releases/download/latest-20260728/OpenRadioss_linux64.zip -O or.zip
+          echo "598ed7b2905a7bacc8d1781470c250ac79d7558c39ba962768edf3644644fe33  or.zip" | sha256sum -c -
+          unzip -q or.zip -d openradioss
+          chmod +x openradioss/OpenRadioss/exec/*
+      - name: Run Starter
+        env:
+          RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
+        run: |
+          cd run_native
+          ../openradioss/OpenRadioss/exec/starter_linux64_gf -i C25_CFRP_NATIVE_0000.rad -np 1 | tee starter.log
+      - name: Run Engine
+        env:
+          RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
+        run: |
+          cd run_native
+          ../openradioss/OpenRadioss/exec/engine_linux64_gf -i C25_CFRP_NATIVE_0001.rad -np 1 | tee engine.log
+      - name: Convert time histories to CSV
+        if: always()
+        run: |
+          cd run_native
+          ls -lah
+          if ls *_T01 1>/dev/null 2>&1; then
+            ../openradioss/OpenRadioss/exec/th_to_csv_linux64_gf *_T01 || true
+          fi
+          find . -maxdepth 1 -type f -printf '%f\n' | sort > files.txt
+      - name: Upload genuine solver outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: C25-CFRP-Genuine-OpenRadioss-3D
+          path: |
+            run_native/*
+          if-no-files-found: error
