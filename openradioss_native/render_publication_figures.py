@@ -119,9 +119,14 @@ def setup_ax(ax):
     ax.set_xlabel('X (mm)'); ax.set_ylabel('Y (mm)'); ax.set_zlabel('Z (mm)')
     ax.grid(False)
 
-def render_cell_scalar(name, filename, title, only_shell=False):
+def render_cell_scalar(name, filename, title, only_shell=False, only_solid=False):
     vals=cell_scalars[name]
-    ids=[i for i,t in enumerate(ctypes) if (t==9 if only_shell else t in (9,12))]
+    if only_shell:
+        ids=[i for i,t in enumerate(ctypes) if t==9]
+    elif only_solid:
+        ids=[i for i,t in enumerate(ctypes) if t==12]
+    else:
+        ids=[i for i,t in enumerate(ctypes) if t in (9,12)]
     polys,pvals=cell_faces(ids,vals)
     vmin=float(np.nanmin(pvals)); vmax=float(np.nanmax(pvals))
     if not math.isfinite(vmin): vmin=0
@@ -151,7 +156,7 @@ def render_point_vector_mag(name, filename, title):
 
 # Candidate real result fields
 # IMPORTANT: 3DELEM fields belong to the concrete brick part; 2DELEM fields belong to the CFRP shell part.
-disp_vec=find_key(point_vectors,['Displacement'])
+disp_vec='Displacement' if 'Displacement' in point_vectors else None
 concrete_von='3DELEM_Von_Mises' if '3DELEM_Von_Mises' in cell_scalars else None
 concrete_damage=[k for k in ['3DELEM_Damage_1','3DELEM_Damage_2','3DELEM_Damage_3'] if k in cell_scalars]
 concrete_energy='3DELEM_Specific_Energy' if '3DELEM_Specific_Energy' in cell_scalars else None
@@ -167,13 +172,13 @@ if disp_vec:
 
 # B: concrete 3D von Mises
 if concrete_von:
-    render_cell_scalar(concrete_von,'Fig_B_Concrete_VonMises_3D.png','C25–CFRP: concrete von Mises stress — OpenRadioss 3D bricks')
+    render_cell_scalar(concrete_von,'Fig_B_Concrete_VonMises_3D.png','C25–CFRP: concrete von Mises stress — OpenRadioss 3D bricks',only_solid=True)
     made.append('Fig_B_Concrete_VonMises_3D.png')
 
 # C1-C3: genuine concrete LAW24 damage variables
 for idx2,k in enumerate(concrete_damage,start=1):
     fn=f'Fig_C{idx2}_Concrete_Damage_{idx2}_3D.png'
-    render_cell_scalar(k,fn,f'C25–CFRP: concrete LAW24 damage variable {idx2} — OpenRadioss')
+    render_cell_scalar(k,fn,f'C25–CFRP: concrete LAW24 damage variable {idx2} — OpenRadioss',only_solid=True)
     made.append(fn)
 
 # D: CFRP shell von Mises
@@ -186,7 +191,7 @@ elif cfrp_energy:
 
 # E: concrete energy (optional supporting diagnostic)
 if concrete_energy:
-    render_cell_scalar(concrete_energy,'Fig_E_Concrete_Specific_Energy_3D.png','C25–CFRP: concrete specific energy — OpenRadioss 3D bricks')
+    render_cell_scalar(concrete_energy,'Fig_E_Concrete_Specific_Energy_3D.png','C25–CFRP: concrete specific energy — OpenRadioss 3D bricks',only_solid=True)
     made.append('Fig_E_Concrete_Specific_Energy_3D.png')
 
 # F: load–deflection curve
