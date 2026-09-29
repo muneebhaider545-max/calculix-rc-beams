@@ -1,0 +1,23 @@
+name: Build 12-case 3D model figure matrix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'model_matrix/**'
+      - '.github/workflows/build-12-model-matrix.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install plotting dependencies
+        run: pip install matplotlib numpy
+      - name: Generate all 12 model figures
+        run: python3 model_matrix/generate_12_model_figures.py
+      - name: Upload model matrix package
+        uses: actions/upload-artifact@v4
+        with:
+          name: RC-Beam-12-Case-3D-Model-Matrix
+          path: model_matrix_outputs/
