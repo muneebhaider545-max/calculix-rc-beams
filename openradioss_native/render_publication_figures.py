@@ -243,3 +243,5 @@ with open(os.path.join(OUT,'README.txt'),'w') as f:
     f.write('Generated files:\\n'+'\\n'.join(made)+'\\n')
 
 print('GENERATED',made)
+
+# trigger publication render workflow
