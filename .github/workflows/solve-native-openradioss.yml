@@ -60,6 +60,9 @@ jobs:
           echo '=== VTK files ==='
           ls -lh *.vtk 2>/dev/null || true
           python3 ../openradioss_native/postprocess_c25_cfrp.py
+          python3 -m pip install -q matplotlib numpy
+          python3 ../openradioss_native/render_c25_cfrp.py
+          ls -lh C25_CFRP_OpenRadioss_3D_visual.png
           find . -maxdepth 1 -type f -printf '%f\n' | sort > files.txt
       - name: Upload genuine solver outputs
         if: always()
