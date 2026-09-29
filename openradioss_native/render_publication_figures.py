@@ -150,62 +150,50 @@ def render_point_vector_mag(name, filename, title):
     fig.tight_layout(); fig.savefig(os.path.join(OUT,filename),dpi=600,bbox_inches='tight'); plt.close(fig)
 
 # Candidate real result fields
-def find_key(d, patterns):
-    for p in patterns:
-        for k in d:
-            if p.lower() in k.lower(): return k
-    return None
-
-disp_vec=find_key(point_vectors,['disp','displacement'])
-von=find_key(cell_scalars,['von','mises'])
-damage_keys=[k for k in cell_scalars if 'dam' in k.lower()]
-energy=find_key(cell_scalars,['specific_energy','energy'])
-epsp=find_key(cell_scalars,['epsp','plastic'])
+# IMPORTANT: 3DELEM fields belong to the concrete brick part; 2DELEM fields belong to the CFRP shell part.
+disp_vec=find_key(point_vectors,['Displacement'])
+concrete_von='3DELEM_Von_Mises' if '3DELEM_Von_Mises' in cell_scalars else None
+concrete_damage=[k for k in ['3DELEM_Damage_1','3DELEM_Damage_2','3DELEM_Damage_3'] if k in cell_scalars]
+concrete_energy='3DELEM_Specific_Energy' if '3DELEM_Specific_Energy' in cell_scalars else None
+cfrp_von='2DELEM_Von_Mises' if '2DELEM_Von_Mises' in cell_scalars else None
+cfrp_energy='2DELEM_Specific_Energy' if '2DELEM_Specific_Energy' in cell_scalars else None
 
 made=[]
-# 1 deformed geometry / displacement
+
+# A: displacement
 if disp_vec:
-    render_point_vector_mag(disp_vec,'Fig_A_Displacement_3D.png','C25–CFRP: OpenRadioss displacement field at final state')
+    render_point_vector_mag(disp_vec,'Fig_A_Displacement_3D.png','C25–CFRP: OpenRadioss displacement magnitude at final state')
     made.append('Fig_A_Displacement_3D.png')
-else:
-    # deformed final geometry with uniform styling
-    vals=np.zeros(len(cells)); polys,pvals=cell_faces(None,vals)
-    fig=plt.figure(figsize=(12,5.8),dpi=220); ax=fig.add_subplot(111,projection='3d')
-    pc=Poly3DCollection(polys,facecolor='0.75',edgecolor=(0,0,0,.16),linewidths=.08); ax.add_collection3d(pc)
-    setup_ax(ax); ax.set_title('C25–CFRP: OpenRadioss final deformed mesh geometry',fontsize=12,pad=12)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT,'Fig_A_Deformed_Mesh_3D.png'),dpi=600,bbox_inches='tight'); plt.close(fig)
-    made.append('Fig_A_Deformed_Mesh_3D.png')
 
-# 2 stress if available
-if von:
-    render_cell_scalar(von,'Fig_B_VonMises_3D.png','C25–CFRP: OpenRadioss von Mises stress contour')
-    made.append('Fig_B_VonMises_3D.png')
+# B: concrete 3D von Mises
+if concrete_von:
+    render_cell_scalar(concrete_von,'Fig_B_Concrete_VonMises_3D.png','C25–CFRP: concrete von Mises stress — OpenRadioss 3D bricks')
+    made.append('Fig_B_Concrete_VonMises_3D.png')
 
-# 3 each real damage field
-for idx,k in enumerate(damage_keys[:3],start=1):
-    fn=f'Fig_C{idx}_Damage_{idx}_3D.png'
-    render_cell_scalar(k,fn,f'C25–CFRP: OpenRadioss concrete damage field — {k}')
+# C1-C3: genuine concrete LAW24 damage variables
+for idx2,k in enumerate(concrete_damage,start=1):
+    fn=f'Fig_C{idx2}_Concrete_Damage_{idx2}_3D.png'
+    render_cell_scalar(k,fn,f'C25–CFRP: concrete LAW24 damage variable {idx2} — OpenRadioss')
     made.append(fn)
 
-# 4 plastic strain/energy if available
-if epsp:
-    render_cell_scalar(epsp,'Fig_D_Plastic_Strain_3D.png','C25–CFRP: OpenRadioss equivalent plastic strain contour')
-    made.append('Fig_D_Plastic_Strain_3D.png')
-if energy:
-    render_cell_scalar(energy,'Fig_E_Specific_Energy_3D.png','C25–CFRP: OpenRadioss specific-energy contour')
-    made.append('Fig_E_Specific_Energy_3D.png')
+# D: CFRP shell von Mises
+if cfrp_von:
+    render_cell_scalar(cfrp_von,'Fig_D_CFRP_VonMises_Shell.png','C25–CFRP: CFRP shell von Mises stress — OpenRadioss',only_shell=True)
+    made.append('Fig_D_CFRP_VonMises_Shell.png')
+elif cfrp_energy:
+    render_cell_scalar(cfrp_energy,'Fig_D_CFRP_Specific_Energy_Shell.png','C25–CFRP: CFRP shell specific energy — OpenRadioss',only_shell=True)
+    made.append('Fig_D_CFRP_Specific_Energy_Shell.png')
 
-# 5 CFRP shell-only real response using best available field
-shell_field=von or (damage_keys[0] if damage_keys else epsp or energy)
-if shell_field:
-    render_cell_scalar(shell_field,'Fig_F_CFRP_Shell_Response.png',f'C25–CFRP: CFRP shell response — {shell_field}',only_shell=True)
-    made.append('Fig_F_CFRP_Shell_Response.png')
+# E: concrete energy (optional supporting diagnostic)
+if concrete_energy:
+    render_cell_scalar(concrete_energy,'Fig_E_Concrete_Specific_Energy_3D.png','C25–CFRP: concrete specific energy — OpenRadioss 3D bricks')
+    made.append('Fig_E_Concrete_Specific_Energy_3D.png')
 
-# 6 load-deflection curve
+# F: load–deflection curve
 if os.path.exists(CSV):
     rows=[]
-    with open(CSV,newline='') as f:
-        rr=csv.DictReader(f)
+    with open(CSV,newline='') as fcsv:
+        rr=csv.DictReader(fcsv)
         for r in rr:
             try: rows.append((abs(float(r['midspan_DZ_mm'])),float(r['load_kN'])))
             except: pass
@@ -217,12 +205,20 @@ if os.path.exists(CSV):
         ax.set_xlabel('Midspan deflection (mm)'); ax.set_ylabel('Load (kN)')
         ax.set_title('C25–CFRP load–deflection response')
         ax.grid(True,alpha=.25); ax.legend(frameon=False)
-        fig.tight_layout(); fig.savefig(os.path.join(OUT,'Fig_G_Load_Deflection.png'),dpi=600,bbox_inches='tight'); plt.close(fig)
-        made.append('Fig_G_Load_Deflection.png')
+        fig.tight_layout(); fig.savefig(os.path.join(OUT,'Fig_F_Load_Deflection.png'),dpi=600,bbox_inches='tight'); plt.close(fig)
+        made.append('Fig_F_Load_Deflection.png')
 
-# 7 combined plate from generated raster files
+# Combined six-panel plate: displacement, concrete stress, three concrete damage variables, CFRP stress
+preferred_plate=[
+    'Fig_A_Displacement_3D.png',
+    'Fig_B_Concrete_VonMises_3D.png',
+    'Fig_C1_Concrete_Damage_1_3D.png',
+    'Fig_C2_Concrete_Damage_2_3D.png',
+    'Fig_C3_Concrete_Damage_3_3D.png',
+    'Fig_D_CFRP_VonMises_Shell.png'
+]
 imgs=[]
-for fn in made[:6]:
+for fn in preferred_plate:
     p=os.path.join(OUT,fn)
     if os.path.exists(p):
         imgs.append((fn,plt.imread(p)))
@@ -231,17 +227,21 @@ if imgs:
     fig=plt.figure(figsize=(14,5.1*rows),dpi=180)
     for j,(fn,img) in enumerate(imgs,1):
         ax=fig.add_subplot(rows,cols,j); ax.imshow(img); ax.axis('off')
-        ax.set_title(chr(96+j)+') '+fn.replace('.png','').replace('_',' '),fontsize=10)
-    fig.suptitle('C25–CFRP — Genuine OpenRadioss 3D result fields',fontsize=14,y=.995)
-    fig.tight_layout(); fig.savefig(os.path.join(OUT,'Fig_H_Combined_OpenRadioss_Plate.png'),dpi=450,bbox_inches='tight'); plt.close(fig)
-    made.append('Fig_H_Combined_OpenRadioss_Plate.png')
+        label=chr(96+j)+')'
+        pretty=fn.replace('.png','').replace('_',' ')
+        ax.set_title(label+' '+pretty,fontsize=10)
+    fig.suptitle('C25–CFRP — genuine OpenRadioss 3D result fields',fontsize=14,y=.995)
+    fig.tight_layout()
+    fig.savefig(os.path.join(OUT,'Fig_G_Combined_OpenRadioss_Plate.png'),dpi=450,bbox_inches='tight')
+    plt.close(fig)
+    made.append('Fig_G_Combined_OpenRadioss_Plate.png')
 
-with open(os.path.join(OUT,'README.txt'),'w') as f:
-    f.write('These figures are rendered directly from the genuine OpenRadioss VTK/CSV outputs.\\n')
-    f.write('They are diagnostic figures from the current trial model, which is not experimentally validated.\\n')
-    f.write('Do not label unavailable result quantities as stress/damage if they are absent from available_fields.json.\\n\\n')
-    f.write('Generated files:\\n'+'\\n'.join(made)+'\\n')
+with open(os.path.join(OUT,'README.txt'),'w') as ftxt:
+    ftxt.write('These figures are rendered directly from the genuine OpenRadioss VTK/CSV outputs.\n')
+    ftxt.write('3DELEM fields are used for concrete brick results; 2DELEM fields are used for the CFRP shell.\n')
+    ftxt.write('The current solver model is a diagnostic trial and is not experimentally validated.\n')
+    ftxt.write('Peak reaction in this trial remains approximately 0.995 kN versus 99.5 kN experimental.\n')
+    ftxt.write('Therefore the figures are real solver outputs but should not yet be used as validated manuscript evidence.\n\n')
+    ftxt.write('Generated files:\n'+'\n'.join(made)+'\n')
 
 print('GENERATED',made)
-
-# trigger publication render workflow
