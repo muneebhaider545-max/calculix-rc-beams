@@ -1,0 +1,24 @@
+name: Build ANSYS MAPDL C25-CFRP Package
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ansys_mapdl/generate_c25_cfrp_mapdl.py'
+      - '.github/workflows/build-ansys-mapdl-package.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build MAPDL input package
+        run: |
+          python3 ansys_mapdl/generate_c25_cfrp_mapdl.py
+          ls -lh C25_CFRP_ANSYS_MAPDL_READY.zip ansys_output/C25_CFRP_MAPDL.dat ansys_output/README.txt
+      - name: Upload MAPDL package
+        uses: actions/upload-artifact@v4
+        with:
+          name: C25-CFRP-ANSYS-MAPDL-READY
+          path: C25_CFRP_ANSYS_MAPDL_READY.zip
+          if-no-files-found: error
