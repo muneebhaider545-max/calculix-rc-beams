@@ -1,0 +1,99 @@
+/CLEAR
+/FILNAME,C25_CFRP_MAPDL,1
+/PREP7
+! ==============================================================
+! C25-CFRP RC beam - ANSYS MAPDL starter model
+! Units: N, mm, MPa
+! ==============================================================
+
+L=1219.2
+B=101.6
+H=203.2
+XS1=76.2
+XS2=1143.0
+XMID=609.6
+
+ET,1,SOLID185
+ET,2,LINK180
+ET,3,SHELL181
+ET,4,INTER205
+
+! Concrete: Menetrey-Willam starting definition
+MP,EX,1,25179.06
+MP,PRXY,1,0.20
+TB,CONCRETE,1,,,MW
+TBDATA,1,28.7,3.0005,34.44
+
+! Reinforcing steel
+MP,EX,2,200000
+MP,PRXY,2,0.30
+TB,BISO,2
+TBDATA,1,413.7,1000
+
+! CFRP orthotropic starting properties
+MP,EX,3,165000
+MP,EY,3,12000
+MP,EZ,3,12000
+MP,PRXY,3,0.30
+MP,PRYZ,3,0.35
+MP,PRXZ,3,0.30
+MP,GXY,3,5000
+MP,GYZ,3,4000
+MP,GXZ,3,5000
+
+! Cohesive interface calibration starting values
+TB,CZM,4,,,BILI
+TBDATA,1,2.0,0.10,2.5,0.40
+
+! Concrete beam geometry
+BLOCK,0,L,0,B,0,H
+VATT,1,,1
+ESIZE,20
+VMESH,ALL
+
+FINISH
+/SOLU
+ANTYPE,STATIC
+NLGEOM,ON
+AUTOTS,ON
+NSUBST,100,1000,20
+NEQIT,50
+LNSRCH,ON
+NROPT,FULL
+OUTRES,ALL,ALL
+
+! Left support
+NSEL,S,LOC,X,XS1
+NSEL,R,LOC,Z,0
+D,ALL,UZ,0
+D,ALL,UX,0
+ALLSEL,ALL
+
+! Right support
+NSEL,S,LOC,X,XS2
+NSEL,R,LOC,Z,0
+D,ALL,UZ,0
+ALLSEL,ALL
+
+! One transverse restraint
+NSEL,S,LOC,X,XS1
+NSEL,R,LOC,Y,0
+NSEL,R,LOC,Z,0
+D,ALL,UY,0
+ALLSEL,ALL
+
+! Midspan displacement-controlled loading
+NSEL,S,LOC,X,XMID
+NSEL,R,LOC,Z,H
+D,ALL,UZ,-25
+ALLSEL,ALL
+
+SOLVE
+FINISH
+
+/POST1
+SET,LAST
+PLDISP,2
+PLNSOL,U,SUM
+PLNSOL,S,EQV
+FINISH
