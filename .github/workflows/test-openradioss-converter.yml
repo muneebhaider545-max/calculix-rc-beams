@@ -1,0 +1,22 @@
+name: Test OpenRadioss Abaqus converter
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/test-openradioss-converter.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download OpenRadioss
+        run: |
+          wget -q https://github.com/OpenRadioss/OpenRadioss/releases/download/latest-20260728/OpenRadioss_linux64.zip -O or.zip
+          unzip -q or.zip -d openradioss
+      - name: Inspect converter
+        run: |
+          sed -n '1,260p' openradioss/OpenRadioss/openradioss_gui/inp2rad.py
+          echo "=== HELP ==="
+          python3 openradioss/OpenRadioss/openradioss_gui/inp2rad.py --help || true
