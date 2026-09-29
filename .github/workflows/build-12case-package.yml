@@ -1,0 +1,25 @@
+name: Build real 12-case 3D model package
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'twelve_case/**'
+      - '.github/workflows/build-12case-package.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate package
+        run: |
+          mkdir -p twelve_case
+          python3 twelve_case/generate_12case_package.py
+          unzip -l RC_Beam_12_Case_3D_Model_Matrix_REAL.zip | tee package_contents.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RC-Beam-12-Case-3D-Model-Matrix
+          path: |
+            RC_Beam_12_Case_3D_Model_Matrix_REAL.zip
+            package_contents.txt
