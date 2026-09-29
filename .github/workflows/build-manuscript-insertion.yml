@@ -1,0 +1,29 @@
+name: Build manuscript-ready 12-case numerical section
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'manuscript_insertion/**'
+      - '.github/workflows/build-manuscript-insertion.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: pip install matplotlib numpy python-docx
+      - name: Rebuild 12-case figure matrix
+        run: python3 model_matrix/generate_12_model_figures.py
+      - name: Build manuscript insertion DOCX
+        run: python3 manuscript_insertion/build_section4_docx.py
+      - name: Upload insertion package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Manuscript-Section4-12-Case-Models
+          path: |
+            manuscript_insertion/Section_4_12_Case_Numerical_Model_Matrix.docx
+            manuscript_insertion/Section_4_replacement_text.txt
+            model_matrix_outputs/Figure_15_12_case_3D_model_matrix.png
+            model_matrix_outputs/12_case_model_matrix.csv
