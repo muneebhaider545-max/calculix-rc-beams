@@ -47,9 +47,18 @@ jobs:
         run: |
           cd run_native
           ls -lah
-          if ls *_T01 1>/dev/null 2>&1; then
-            ../openradioss/OpenRadioss/exec/th_to_csv_linux64_gf *_T01 || true
+          if ls *T01 1>/dev/null 2>&1; then
+            ../openradioss/OpenRadioss/exec/th_to_csv_linux64_gf C25_CFRP_NATIVET01 || true
           fi
+          if [ -f C25_CFRP_NATIVEA051.gz ]; then
+            gzip -dkf C25_CFRP_NATIVEA051.gz
+            ../openradioss/OpenRadioss/exec/anim_to_vtk_linux64_gf C25_CFRP_NATIVEA051 || true
+          fi
+          echo '=== CSV files ==='
+          ls -lh *.csv 2>/dev/null || true
+          for q in *.csv; do [ -f "$q" ] && { echo "=== $q HEAD ==="; head -8 "$q"; }; done
+          echo '=== VTK files ==='
+          ls -lh *.vtk 2>/dev/null || true
           find . -maxdepth 1 -type f -printf '%f\n' | sort > files.txt
       - name: Upload genuine solver outputs
         if: always()
