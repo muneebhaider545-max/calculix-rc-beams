@@ -1,0 +1,23 @@
+name: Inspect OpenRadioss package
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/inspect-openradioss.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download OpenRadioss
+        run: |
+          wget -q https://github.com/OpenRadioss/OpenRadioss/releases/download/latest-20260728/OpenRadioss_linux64.zip -O or.zip
+          echo "598ed7b2905a7bacc8d1781470c250ac79d7558c39ba962768edf3644644fe33  or.zip" | sha256sum -c -
+          unzip -q or.zip -d openradioss
+      - name: Inspect binaries and converters
+        run: |
+          find openradioss -maxdepth 4 -type f | sed 's#^#FILE #' | head -300
+          echo "=== converter candidates ==="
+          find openradioss -type f | grep -Ei 'abaqus|convert|starter|engine|anim|vtk' | head -300
