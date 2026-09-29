@@ -1,0 +1,16 @@
+name: Inspect OpenRadioss converter CLI
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/inspect-openradioss-cli.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          wget -q https://github.com/OpenRadioss/OpenRadioss/releases/download/latest-20260728/OpenRadioss_linux64.zip -O or.zip
+          unzip -q or.zip -d openradioss
+          grep -nE 'ArgumentParser|add_argument|parse_args|__main__|input_file' openradioss/OpenRadioss/openradioss_gui/inp2rad.py | tail -80
+          tail -180 openradioss/OpenRadioss/openradioss_gui/inp2rad.py
