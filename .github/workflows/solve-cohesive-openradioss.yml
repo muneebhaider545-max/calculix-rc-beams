@@ -54,36 +54,7 @@ jobs:
             RAW=${LAST%.gz}
             ../openradioss/OpenRadioss/exec/anim_to_vtk_linux64_gf "$RAW" > C25_CFRP_COHESIVE_final.vtk || true
           fi
-          python3 - <<'PY'
-import csv,glob,os
-fn=glob.glob('C25_CFRP_COHESIVET01.csv')
-if fn:
-    with open(fn[0],newline='') as f: rows=list(csv.reader(f))
-    h=rows[0]; num=[]
-    for r in rows[1:]:
-        try:num.append([float(x) for x in r])
-        except:pass
-    cols=[i for i,x in enumerate(h) if 'Load line nodes' in x]
-    if len(cols)>=6 and num:
-        dz=cols[0::2][:3]; rz=cols[1::2][:3]
-        data=[]
-        for v in num:
-            d=sum(v[i] for i in dz)/3.0; R=sum(v[i] for i in rz); data.append((v[0],d,abs(R)/1000.0))
-        peak=max(data,key=lambda q:q[2])
-        ie=h.index('INTERNAL ENERGY') if 'INTERNAL ENERGY' in h else None
-        ke=h.index('KINETIC ENERGY') if 'KINETIC ENERGY' in h else None
-        ratios=[]
-        if ie is not None and ke is not None:
-            for v in num:
-                if abs(v[ie])>1e-12: ratios.append(abs(v[ke])/abs(v[ie]))
-        with open('cohesive_solver_summary.txt','w') as f:
-            f.write(f'Peak reaction load = {peak[2]:.6f} kN\n')
-            f.write(f'Displacement at peak = {peak[1]:.6f} mm\n')
-            f.write(f'Peak time = {peak[0]:.6f} s\n')
-            f.write(f'Peak load error vs 99.5 kN = {(peak[2]-99.5)/99.5*100:.3f}%\n')
-            f.write(f'Max KE/IE = {max(ratios) if ratios else float("nan"):.6f}\n')
-        print(open('cohesive_solver_summary.txt').read())
-PY
+          python3 ../openradioss_native/postprocess_c25_cfrp_cohesive.py
           cat C25_CFRP_COHESIVE_metadata.txt
           ls -lh
       - name: Upload cohesive results
