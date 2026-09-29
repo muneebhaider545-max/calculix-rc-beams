@@ -69,13 +69,7 @@ jobs:
           cat publication_figures/available_fields.json || true
           echo '=== GENERATED README ==='
           cat publication_figures/README.txt || true
-          python3 - <<'PY'
-from PIL import Image
-p='publication_figures/Fig_H_Combined_OpenRadioss_Plate.png'
-im=Image.open(p).convert('RGB')
-im.thumbnail((1800,1800))
-im.save('publication_figures/OpenRadioss_Publication_Preview.jpg',quality=88,optimize=True)
-PY
+          python3 ../openradioss_native/make_publication_preview.py
           echo PUB_PREVIEW_BASE64_BEGIN
           base64 -w0 publication_figures/OpenRadioss_Publication_Preview.jpg
           echo
