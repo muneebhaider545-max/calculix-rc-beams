@@ -25,18 +25,23 @@ jobs:
           echo "598ed7b2905a7bacc8d1781470c250ac79d7558c39ba962768edf3644644fe33  or.zip" | sha256sum -c -
           unzip -q or.zip -d openradioss
           chmod +x openradioss/OpenRadioss/exec/*
+          find openradioss/OpenRadioss -name 'libhm_reader_linux64.so' -print
       - name: Run Starter
         env:
           RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
         run: |
+          set -o pipefail
+          LIB=$(find ../openradioss/OpenRadioss -name 'libhm_reader_linux64.so' -printf '%h\n' | head -1)
+          export LD_LIBRARY_PATH="$LIB:${LD_LIBRARY_PATH:-}"
           cd run_native
-          ../openradioss/OpenRadioss/exec/starter_linux64_gf -i C25_CFRP_NATIVE_0000.rad -np 1 | tee starter.log
+          ../openradioss/OpenRadioss/exec/starter_linux64_gf -i C25_CFRP_NATIVE_0000.rad -nt 1 2>&1 | tee starter.log
       - name: Run Engine
         env:
           RAD_CFG_PATH: ${{ github.workspace }}/openradioss/OpenRadioss/hm_cfg_files
         run: |
+          set -o pipefail
           cd run_native
-          ../openradioss/OpenRadioss/exec/engine_linux64_gf -i C25_CFRP_NATIVE_0001.rad -np 1 | tee engine.log
+          ../openradioss/OpenRadioss/exec/engine_linux64_gf -i C25_CFRP_NATIVE_0001.rad -nt 1 2>&1 | tee engine.log
       - name: Convert time histories to CSV
         if: always()
         run: |
